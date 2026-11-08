@@ -22,8 +22,10 @@ def num(c, t):                           # text -> decimal -> rounded integer ty
 NUM = r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
 pt = rf"POINT\s*\(\s*({NUM})\s+({NUM})\s*\)"
 inf = F.col("wkt_geom").contains("Infinity")           # 9 rows are POINT (-Infinity -Infinity)
-d1 = F.to_date("start_date", "yyyy/MM/dd")
-d2 = F.to_date("end_date", "yyyy/MM/dd")
+# 3 rows use 2016-01-01 instead of 2016/01/01 (PostgreSQL's ::date accepts both), so try both formats
+def to_d(c): return F.coalesce(F.to_date(c, "yyyy/MM/dd"), F.to_date(c, "yyyy-MM-dd"))
+d1 = to_d("start_date")
+d2 = to_d("end_date")
 
 # Data-quality facts the SQL lab documents; the setup script checks them
 s = raw.agg(F.count("*").alias("n"),
