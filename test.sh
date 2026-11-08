@@ -14,7 +14,7 @@ spark_submit() { docker exec -e LAYOUT="$LAYOUT" "$SPARK" /opt/spark/bin/spark-s
     --master 'local[*]' --driver-memory "$SPARK_MEM" "$@" </dev/null; }
 
 require_docker
-docker ps --format '{{.Names}}' | grep -qx "$SPARK" || fail "The baseline isn't running. Run ./setup.sh first."
+docker ps --format '{{.Names}}' | grep -x "$SPARK" >/dev/null || fail "The baseline isn't running. Run ./setup.sh first."
 
 RUN=$(date +%Y%m%d-%H%M%S)
 OUT=../results/hdfs-$RUN; mkdir -p "$OUT"

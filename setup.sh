@@ -34,7 +34,9 @@ fi
 step "2/4 Start HDFS (1 namenode + 1 datanode) and Spark"
 docker compose up -d >/dev/null || fail "Containers didn't start. See: docker compose logs"
 for i in $(seq 1 60); do
-    docker exec "$NN" hdfs dfsadmin -report 2>/dev/null | grep -q 'Live datanodes (1)' && break
+    # not "cmd | grep -q": with pipefail, grep exiting early can make the pipeline report failure
+    report=$(docker exec "$NN" hdfs dfsadmin -report 2>/dev/null || true)
+    grep -q 'Live datanodes (1)' <<<"$report" && break
     sleep 3
     [[ $i == 60 ]] && fail "The datanode didn't register. See: docker compose logs namenode datanode"
 done
