@@ -1,0 +1,36 @@
+# UGLC HDFS + Parquet baseline: comparison point for the PostgreSQL + ClickHouse lab.
+#   - HDFS (1 namenode + 1 datanode, replication 1)  -> storage
+#   - Spark SQL (local mode)                          -> query engine over Parquet
+# Don't start this by hand: ./setup.sh does it.
+name: uglc-lab-hdfs
+
+services:
+  namenode:
+    image: apache/hadoop:3.4.1
+    container_name: uglc-lab-hdfs-nn
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9871:9870"   # web UI (9870 + 1, like the other lab)
+    env_file: ./config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+
+  datanode:
+    image: apache/hadoop:3.4.1
+    container_name: uglc-lab-hdfs-dn
+    command: ["hdfs", "datanode"]
+    env_file: ./config
+    depends_on:
+      - namenode
+
+  spark:
+    image: apache/spark:3.5.3-python3
+    container_name: uglc-lab-hdfs-spark
+    command: ["sleep", "infinity"]
+    depends_on:
+      - namenode
+      - datanode
+    volumes:
+      - ../data:/data:ro        # the CSV exported from PostgreSQL
+      - ./spark:/opt/app:ro     # load.py, bench.py, contrib.py
